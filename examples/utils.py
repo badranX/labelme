@@ -25,6 +25,7 @@ from pathlib import Path
 from pathlib import PureWindowsPath
 from typing import Any
 
+from labelme import _app
 import numpy as np
 import PIL.Image
 import PIL.ImageDraw
@@ -35,16 +36,21 @@ from numpy.typing import NDArray
 class LabeledImage:
     image_data: bytes
     shapes: list[dict[str, Any]]
+    image_path: Path
 
+
+def scan_label_files(root_dir: str) -> LabeledImage:
+    image_paths = _app._scan_image_files(root_dir=root_dir)
+    return [Path(pp).with_suffix(".json") for pp in image_paths]
 
 def load_label_file(filename: str) -> LabeledImage:
     with open(filename, encoding="utf-8") as f:
         data = json.load(f)
 
+    image_path = PureWindowsPath(data["imagePath"]).as_posix()
     if data.get("imageData") is not None:
         image_data = base64.b64decode(data["imageData"])
     else:
-        image_path = PureWindowsPath(data["imagePath"]).as_posix()
         image_data = (Path(filename).parent / image_path).read_bytes()
 
     shapes = [
@@ -60,7 +66,7 @@ def load_label_file(filename: str) -> LabeledImage:
         }
         for shape in data["shapes"]
     ]
-    return LabeledImage(image_data=image_data, shapes=shapes)
+    return LabeledImage(image_data=image_data, shapes=shapes, image_path=image_path)
 
 
 def img_data_to_arr(img_data: bytes) -> NDArray[np.uint8]:
