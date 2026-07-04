@@ -54,6 +54,8 @@ def _circle_to_polygon_segmentation(
 
 
 def main() -> None:
+    OUT_IMAGE_DIR = "PNGImages"
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
@@ -68,7 +70,7 @@ def main() -> None:
         print("Output directory already exists:", output_dir)
         sys.exit(1)
     output_dir.mkdir(parents=True)
-    (output_dir / "JPEGImages").mkdir(parents=True)
+    (output_dir / OUT_IMAGE_DIR).mkdir(parents=True)
     if not args.noviz:
         (output_dir / "Visualization").mkdir(parents=True)
     print("Creating dataset:", output_dir)
@@ -115,7 +117,7 @@ def main() -> None:
             )
         )
 
-    out_ann_file = output_dir / "annotations.json"
+    out_ann_file = output_dir / "_annotations.coco.json"
     label_files = sorted(Path(args.input_dir).glob("*.json"))
     for image_id, path in enumerate(label_files):
         print("Generating dataset from:", path)
@@ -123,7 +125,7 @@ def main() -> None:
         label_file = utils.load_label_file(str(path))
 
         base = path.stem
-        out_img_file = output_dir / "JPEGImages" / f"{base}.jpg"
+        out_img_file = output_dir / OUT_IMAGE_DIR / f"{base}.png"
 
         img = utils.img_data_to_arr(label_file.image_data)
         if img.ndim == 3 and img.shape[2] == 4:
